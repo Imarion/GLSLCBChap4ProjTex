@@ -13,6 +13,7 @@
 #include <QOpenGLShaderProgram>
 
 #include "teapot.h"
+#include "vboplane.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -66,7 +67,8 @@ private:
     GLuint TexId;
 
     Teapot     *mTeapot;
-    QMatrix4x4 ModelMatrixTeapot, ViewMatrix, ProjectionMatrix;
+    VBOPlane   *mPlane;
+    QMatrix4x4 ModelMatrixTeapot, ModelMatrixPlane, ViewMatrix, ProjectionMatrix;
 
     QVector3D  mProjLookat;
     QMatrix4x4 mProjectorMatrix;

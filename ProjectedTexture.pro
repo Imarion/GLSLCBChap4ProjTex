@@ -10,12 +10,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     projtex.cpp \
-    teapot.cpp    
+    teapot.cpp \    
+    vboplane.cpp
 
 HEADERS += \
     projtex.h \
     teapotdata.h \
-    teapot.h    
+    teapot.h \    
+    vboplane.h
 	
 OTHER_FILES += \
     fshader.txt \

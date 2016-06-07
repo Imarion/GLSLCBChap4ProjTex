@@ -16,11 +16,13 @@
 
 MyWindow::~MyWindow()
 {
-    if (mProgram != 0) delete mProgram;
+    if (mProgram !=0) delete mProgram;
+    if (mTeapot  !=0) delete mTeapot;
+    if (mPlane   !=0) delete mPlane;
 }
 
 MyWindow::MyWindow()
-    : mProgram(0), currentTimeMs(0.0f), currentTimeS(0.0f), tPrev(0.0f), angle(1.5708f), rotSpeed(M_PI / 8.0f)
+    : mProgram(0), currentTimeMs(0.0f), currentTimeS(0.0f), tPrev(0.0f), angle(1.5708f), rotSpeed(M_PI / 8.0f), mTeapot(0), mPlane(0)
 {
     setSurfaceType(QWindow::OpenGLSurface);
     setFlags(Qt::Window | Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint);
@@ -133,6 +135,42 @@ void MyWindow::CreateVertexBuffer()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, TeapotHandles[3]);
 
     mFuncs->glBindVertexArray(0);
+
+    // Plane
+    mFuncs->glGenVertexArrays(1, &mVAOPlane);
+    mFuncs->glBindVertexArray(mVAOPlane);
+
+    mPlane = new VBOPlane(100.0f, 100.0f, 1, 1);
+
+    // Create and populate the buffer objects
+    unsigned int PlaneHandles[3];
+    glGenBuffers(3, PlaneHandles);
+
+    glBindBuffer(GL_ARRAY_BUFFER, PlaneHandles[0]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mPlane->getnVerts()) * sizeof(float), mPlane->getv(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, PlaneHandles[1]);
+    glBufferData(GL_ARRAY_BUFFER, (3 * mPlane->getnVerts()) * sizeof(float), mPlane->getn(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PlaneHandles[2]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * mPlane->getnFaces() * sizeof(unsigned int), mPlane->getelems(), GL_STATIC_DRAW);
+
+    // Setup the VAO
+    // Vertex positions
+    mFuncs->glBindVertexBuffer(0, PlaneHandles[0], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(0, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(0, 0);
+
+    // Vertex normals
+    mFuncs->glBindVertexBuffer(1, PlaneHandles[1], 0, sizeof(GLfloat) * 3);
+    mFuncs->glVertexAttribFormat(1, 3, GL_FLOAT, GL_FALSE, 0);
+    mFuncs->glVertexAttribBinding(1, 1);
+
+    // Indices
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, PlaneHandles[2]);
+
+    mFuncs->glBindVertexArray(0);
+
 }
 
 void MyWindow::initMatrices()
@@ -141,6 +179,8 @@ void MyWindow::initMatrices()
 
     ModelMatrixTeapot.translate(0.0f, -1.0f, 0.0f);
     ModelMatrixTeapot.rotate(-90.f, 1.0f, 0.0f, 0.0f);
+
+    ModelMatrixPlane.translate(0.0f, -0.75f, 0.0f);
 
     //ViewMatrix.lookAt(QVector3D(0.0f, 0.0f, 6.0f), QVector3D(0.0f,2.0f,0.0f), QVector3D(0.0f,1.0f,0.0f));
 
@@ -239,6 +279,39 @@ void MyWindow::render()
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);        
+    }
+    mProgram->release();
+
+    // *** Draw plane
+    mFuncs->glBindVertexArray(mVAOPlane);
+
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+
+    mProgram->bind();
+    {
+        mProgram->setUniformValue("Material.Kd", 0.4f, 0.4f, 0.4f);
+        mProgram->setUniformValue("Material.Ks", 0.0f, 0.0f, 0.0f);
+        mProgram->setUniformValue("Material.Ka", 0.1f, 0.1f, 0.1f);
+        mProgram->setUniformValue("Material.Shininess", 1.0f);
+
+        mProgram->setUniformValue("WorldCameraPosition", cameraPos);
+
+        QMatrix4x4 mv = ViewMatrix * ModelMatrixPlane;
+        mProgram->setUniformValue("ModelMatrix", ModelMatrixPlane);
+        mProgram->setUniformValue("ModelViewMatrix", mv);
+        mProgram->setUniformValue("NormalMatrix", mv.normalMatrix());
+        mProgram->setUniformValue("MVP", ProjectionMatrix * mv);
+
+        mProgram->setUniformValue("ProjectorMatrix", mProjectorMatrix);
+
+        mProgram->setUniformValue("Light.Position", QVector4D(0.0f,0.0f,0.0f,1.0f) );
+        mProgram->setUniformValue("Light.Intensity", QVector3D(1.0f,1.0f,1.0f));
+
+        glDrawElements(GL_TRIANGLES, 6 * mPlane->getnFaces(), GL_UNSIGNED_INT, ((GLubyte *)NULL + (0)));
+
+        glDisableVertexAttribArray(0);
+        glDisableVertexAttribArray(1);
     }
     mProgram->release();
 
