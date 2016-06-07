@@ -43,6 +43,7 @@ private:
     void initShaders();
     void CreateVertexBuffer();    
     void initMatrices();
+    void calcProjectorMatrix();
 
     void PrepareTexture(GLenum TextureUnit, GLenum TextureTarget, const QString& FileName, bool flip);
     void PrepareCubeMap(GLenum TextureUnit, const QString& BaseFileName, bool flip);

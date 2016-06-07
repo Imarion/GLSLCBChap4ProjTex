@@ -75,6 +75,8 @@ void MyWindow::modCurTime()
 
 void MyWindow::initialize()
 {
+    mProjLookat = QVector3D(-2.0f,-4.0f,0.0f);
+
     CreateVertexBuffer();
     initShaders();
     initMatrices();
@@ -185,8 +187,12 @@ void MyWindow::initMatrices()
     //ViewMatrix.lookAt(QVector3D(0.0f, 0.0f, 6.0f), QVector3D(0.0f,2.0f,0.0f), QVector3D(0.0f,1.0f,0.0f));
 
     //Projector
+    calcProjectorMatrix();
+}
+
+void MyWindow::calcProjectorMatrix()
+{
     QVector3D projPos(2.0f,5.0f,5.0f);
-    mProjLookat = QVector3D(-2.0f,-4.0f,0.0f);
     QVector3D projUp(0.0f,1.0f,0.0f);
 
     QMatrix4x4 projView;
@@ -243,6 +249,8 @@ void MyWindow::render()
     ViewMatrix.setToIdentity();
     QVector3D cameraPos = QVector3D( 7.0f * cos(angle), 2.0f, 7.0f * sin(angle));
     ViewMatrix.lookAt(cameraPos, QVector3D(0.0f,0.0f,0.0f), QVector3D(0.0f,1.0f,0.0f));
+
+    calcProjectorMatrix();
 
     //QMatrix4x4 RotationMatrix;
     //RotationMatrix.rotate(EvolvingVal, QVector3D(0.1f, 0.0f, 0.1f));
@@ -404,12 +412,16 @@ void MyWindow::keyPressEvent(QKeyEvent *keyEvent)
         case Qt::Key_P:
             break;
         case Qt::Key_Up:
+            mProjLookat.setY(mProjLookat.y() + 0.1f);
             break;
         case Qt::Key_Down:
+            mProjLookat.setY(mProjLookat.y() - 0.1f);
             break;
         case Qt::Key_Left:
+            mProjLookat.setX(mProjLookat.x() - 0.1f);
             break;
         case Qt::Key_Right:
+            mProjLookat.setX(mProjLookat.x() + 0.1f);
             break;
         case Qt::Key_Delete:
             break;
